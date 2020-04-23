@@ -132,6 +132,10 @@ end
 
 function sampleSel(popSize, nSires, nDams, nGen,maleParents,femaleParents;gen=1,fileName="", weights = false, direction=1)
 
+	#if nSires > length(maleParents.animalCohort)
+	#	error("More sires than parents i.e. $(nSires) > $(length(maleParents.animalCohort))\n")
+	#end
+
     maleCandidates   = deepcopy(maleParents)
     femaleCandidates = deepcopy(femaleParents)
     sires = Cohort(Array{Animal}(undef,0),Array{Int64}(undef,0,0))
@@ -144,11 +148,23 @@ function sampleSel(popSize, nSires, nDams, nGen,maleParents,femaleParents;gen=1,
     end
     println(weights)
     for i=1:nGen
-        @printf "Generation %5d: sampling %5d males and %5d females\n" gen+i round(Int,popSize/2) round(Int,popSize/2)
+        @printf "GenerationX %5d: sampling %5d males and %5d females\n" gen+i round(Int,popSize/2) round(Int,popSize/2)
+print("maleCandidates is a $(typeof(maleCandidates))\n")
+print("maleCandidates.animalCohort is a $(typeof(maleCandidates.animalCohort))\n")
+print("maleCandidates.animalCohort[1] is a $(typeof(maleCandidates.animalCohort[1]))\n")
+#print("maleCandidates.animalCohort[1][1] is a $(typeof(maleCandidates.animalCohort[1][1]))\n")
+print("size = $(size(maleCandidates.animalCohort))\n")
+
         y = getOurPhenVals(maleCandidates)*weights*direction
-        sires.animalCohort = maleCandidates.animalCohort[sortperm(y)][(end-nSires+1):end]
+print("size(y) = $(size(y)) nSires = $(nSires)\n")
+
+	selectedIndexes = sortperm(y)[(end-nSires+1):end]	
+        sires.animalCohort = maleCandidates.animalCohort[selectedIndexes]
+
         y = getOurPhenVals(femaleCandidates)*weights*direction
-        dams.animalCohort = femaleCandidates.animalCohort[sortperm(y)][(end-nDams+1):end]
+	selectedIndexes = sortperm(y)[(end-nDams+1):end]
+        dams.animalCohort = femaleCandidates.animalCohort[selectedIndexes]
+
         boys = sampleChildren(sires,dams,round(Int,popSize/2))
         gals = sampleChildren(sires,dams,round(Int,popSize/2))
         if fileName!=""
