@@ -20,7 +20,7 @@ function getOurPhenVals(my::Cohort, varRes=0)
     for (i,animal) = enumerate(my.animalCohort)
         if length(animal.phenVal) == 0
 	    #for t in 1:nTraits?
-            animal.phenVal[t] =  animal.genVal + LRes * randn(nTraits)
+            animal.phenVal =  animal.genVal + LRes * randn(nTraits)
         end
         phenVals[i,:] = animal.phenVal
     end
@@ -34,10 +34,18 @@ function getOurGenVals(my::Cohort,nTraits=0)
         else
             error("getOurGenVals(): common.LRes is not initialized, cannot get the number of traits from the 2nd dimension of the residual variance matrix.")
         end
+    else
+	print("nTraits = $(nTraits)\n")
+	print("qtl_effects = $(common.G.qtl_effects)\n")
+	print("qtl_index = $(common.G.qtl_index)\n")
     end
-          
+    #if nTraits != 1
+	#error("nTraits == $(nTraits) is not yet implmented")
+    #end
+     
     n = size(my.animalCohort,1)
     genVals = Array{Float64}(undef,n,nTraits)
+    traitIndex = 1 # hardwire only 1 trait at the moment
     for (i,animal) = enumerate(my.animalCohort)
         if i%1000 == 0
             println("getOurGenVals(): ", i)
@@ -47,11 +55,14 @@ function getOurGenVals(my::Cohort,nTraits=0)
             myGenotypes = getMyGenotype(animal)
             #animal.genVal = dot(myGenotypes[common.G.qtl_index],common.G.qtl_effects)
 	    # need something like
-            #for i in 1:nTraits ?
-              animal.genVal[i] = (myGenotypes[common.G.qtl_index]'common.G.qtl_effects[i])'
-	    end
+            #for traitIndex in 1:nTraits ?
+#print("myGenotypes[common.G.qtl_index] : type $(typeof(myGenotypes[common.G.qtl_index])) value $(myGenotypes[common.G.qtl_index])\n")
+#print("animal.genVal : type $(typeof(animal.genVal)) value $(animal.genVal)\n")
+              push!(animal.genVal, dot(myGenotypes[common.G.qtl_index],common.G.qtl_effects))
+	    #end
         end
-        genVals[i,:] = animal.genVal
+#	print("animal.genVal = $(animal.genVal)\n")
+        genVals[i,traitIndex] = animal.genVal[traitIndex]
     end
     return genVals
 end
