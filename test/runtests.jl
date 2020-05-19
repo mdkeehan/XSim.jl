@@ -90,7 +90,7 @@ end
 	numChr   = 2    #number of chromosomes
 	nmarkers = 10   #number of loci for each chromosome
 	nQTL     = 1    #number of QTL for each chromosomefects,mutRate);
-	build_genome(numChr,chrLength,nmarkers,nQTL)
+	build_genome(numChr,chrLength,nmarkers,nQTL) # defaults to 1 trait
 
 	popSize =10
 	ngen =5
@@ -99,8 +99,8 @@ end
 	dams  = sampleFounders(popSizeFounder);
 
 	# Initilize LRes for 1 trait
-	A = fill(1.0,1,1)
-	XSim.setResidualVariance(cholesky(A).U')
+	#A = fill(1.0,1,1)
+	XSim.setResidualVariance(1.0)
 
 	sire1,dam1,gen1=sampleSel(popSize, 4, 4, ngen,sires, dams);
 end
@@ -114,10 +114,11 @@ end
 	@test XSim.common.countChromosome == 0 #Number of chromosomes in founder population ; starts at 1
 
 	chrLength= 0.1  #length of each chromosome
-	numChr   = 2    #number of chromosomes
-	nmarkers = 10   #number of loci for each chromosome
-	nQTL     = 1    #number of QTL for each chromosomefects,mutRate);
-	build_genome(numChr,chrLength,nmarkers,nQTL)
+	numChr   = 2    	#number of chromosomes
+	nmarkers = 10   	#number of loci for each chromosome
+	nQTL     = 1    	#number of QTL for each chromosomefects,mutRate);
+	nTraits = 2		# number of traits
+	build_genome(numChr,chrLength,nmarkers,nQTL,nTraits)
 
 	popSize = 10
 	ngen = 5
@@ -125,9 +126,9 @@ end
 	sires = sampleFounders(popSizeFounder);
 	dams  = sampleFounders(popSizeFounder);
 
-	# initialize for 2 trait
+	# initialize residual variance for 2 trait
 	A = [10.0 0 ; 0 3.0]
-	XSim.setResidualVariance(cholesky(A).U')
+	XSim.setResidualVariance(A)
 	
 	sire1,dam1,gen1=sampleSel(popSize, 4, 4, ngen,sires, dams);
 end
@@ -136,11 +137,12 @@ end
 # This testset is designed to show how not initializing the globals
 # causes various failure modes.
 #
-@testset "Mating with selection" begin
+@testset "nTrait mismatches" begin
 	clearGlobals()
 	@test XSim.common.G.numChrom == 0
 	@test length(XSim.common.G.chr) == 0
 	@test XSim.common.countChromosome == 0 #Number of chromosomes in founder population ; starts at 1
+	@test XSim.get_num_traits(XSim.common.G) == 0
 
 	popSize =10
 	ngen =5
@@ -151,11 +153,13 @@ end
 	# if LRes is not initialized 
 	@test_throws ErrorException sire2,dam2,gen2=sampleSel(popSize, 4, 4, ngen,sires, dams);
 
-	# Once LRes has been initialzed for 1 trait
-	A = fill(1.0,1,1)
-	XSim.setResidualVariance(cholesky(A).U')
-	
+	# Once LRes has been initialzed for 1 trait or
+	# LRes = fill(1.0,1,1)
+	# we still have an error as 0 qtl have been generated
+	@test_throws DimensionMismatch XSim.setResidualVariance(1.0)
+	@test XSim.get_num_traits(XSim.common.G) == 0
+
 	# this happens as the QTL have not been initialized...
-	@test_throws DimensionMismatch sire2,dam2,gen2=sampleSel(popSize, 4, 4, ngen,sires, dams);
+	@test_throws ErrorException sire2,dam2,gen2=sampleSel(popSize, 4, 4, ngen,sires, dams);
 end
 
