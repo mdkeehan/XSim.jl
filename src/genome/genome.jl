@@ -24,9 +24,14 @@ mutable struct GenomeInfo
     qtl_effects::Array{Float64,2} # second dim is for traits
 end
 
-
 ###Methods
 
+"""
+    get_num_traits(my::ChromosomeInfo)
+"""
+function get_num_traits(my::GenomeInfo)
+    return size(my.qtl_effects)[2]
+end
 ##set genome information: number of loci,chromosomes
 function set_num_loci(my::ChromosomeInfo,n::Int64)
     my.numLoci=n; nothing
